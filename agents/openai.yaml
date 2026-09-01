@@ -1,0 +1,14 @@
+interface:
+  display_name: Archaic Java
+  short_description: Develop explicit JDK-first JPMS projects
+  default_prompt: Use $archaic-java to create or extend this project in the school
+    of Archaic Java.
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true
