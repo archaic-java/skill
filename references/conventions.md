@@ -32,7 +32,7 @@ These are decision criteria, not permission to rewrite a working repository. Mat
 <project>/
 ├── AGENTS.md
 ├── README.md
-├── args/
+├── cmd/
 │   ├── compile
 │   ├── run
 │   └── test
@@ -51,7 +51,7 @@ These are decision criteria, not permission to rewrite a working repository. Mat
 └── out/                       # generated and ignored
 ```
 
-Some established projects use `cmd/` instead of `args/`. Preserve that choice. Eclipse `.project` and `.classpath` files may exist as editor metadata; they do not replace the command-line build.
+Some established projects use `args/` instead of `cmd/`. change them and their respective docs. Eclipse `.project` and `.classpath` files may exist as editor metadata; they do not replace the command-line build.
 
 ## Module and package design
 
