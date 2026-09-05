@@ -1,6 +1,6 @@
 ---
 name: archaic-java
-description: "Create, maintain, extend, diagnose, or review projects in the school of Archaic Java: JDK 25, explicit JPMS modules, javac/java argument files, source-linked or modular-JAR dependencies, JDK-first implementations, Minau tests, and versioned service contracts. Use for archaic.work repositories or when the user explicitly asks for Archaic Java conventions. Do not impose these conventions on unrelated Java projects."
+description: "Create, maintain, extend, diagnose, or review projects in the school of Archaic Java: JDK 25, explicit JPMS modules, javac/java argument files, source-linked or modular-JAR dependencies, JDK-first implementations, Minau tests, versioned service contracts, and the Archaic Java web design system. Use for archaic.work repositories or when the user explicitly asks for Archaic Java conventions or visual design. Do not impose these conventions on unrelated Java projects."
 ---
 
 # Archaic Java
@@ -58,10 +58,16 @@ When adding or changing functionality:
 
 Do not create a service abstraction for code with no plausible alternate provider. Conversely, do not bypass an existing service contract by importing a provider implementation directly.
 
+## Apply the Archaic Java design system
+
+When designing a website, web application, or documentation interface with this skill, read [references/design-system.md](references/design-system.md). Apply the shared visual identity unless the user or existing project specifies another design. This visual system can also be requested independently of a Java implementation; it does not choose a frontend framework or impose Java build conventions on another stack.
+
+Use [assets/design-system/foundation.css](assets/design-system/foundation.css) as a small starting point and [assets/design-system/index.html](assets/design-system/index.html) as the accepted visual specimen. Sans serif establishes structure; serif explains; monospace specifies. The reference defines Riot's identity and permitted variations.
+
 ## Document only the mechanics users need
 
 Keep `AGENTS.md` concise and operational: project name, required JDK, build-tool prohibition, dependency locations, and unusual constraints. Keep `README.md` focused on purpose and the canonical build, test, and run commands. Document public modules, packages, and APIs with Javadoc where the contract is not obvious from types alone.
 
 ## Verify completion
 
-Report the exact commands run and their results. A change is not complete merely because sources look correct: the JPMS graph must compile, tests must run with assertions enabled, and the intended module entry point must launch successfully.
+Report the exact checks run and their results. For Java changes, the JPMS graph must compile, tests must run with assertions enabled, and the intended module entry point must launch successfully. For visual-only changes, verify the affected layout, assets, and interactions as described in the design-system reference; no Java build is required when Java behavior is untouched.

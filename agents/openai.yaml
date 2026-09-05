@@ -1,6 +1,6 @@
 interface:
   display_name: Archaic Java
-  short_description: Develop explicit JDK-first JPMS projects
+  short_description: "Build explicit Java systems and consistent web interfaces"
   default_prompt: Use $archaic-java to create or extend this project in the school
     of Archaic Java.
   icon_small: assets/icon.svg
