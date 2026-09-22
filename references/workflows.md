@@ -138,30 +138,52 @@ If changing an existing version would break source, binary, or semantic compatib
 
 ## Add Minau tests
 
-The test descriptor normally resembles:
+Use testing v02 for new suites when supported by the selected catalog and Minau revisions. Keep existing v01 suites unless migration is requested.
+
+For a v02 test module, export only the suite package to the runner; do not add `opens` for case records:
 
 ```java
 module work.archaic.example.test {
     requires work.archaic.example;
     requires work.archaic.service.catalog;
-    exports work.archaic.example.test;
-    opens work.archaic.example.test to work.archaic.minau;
+    exports work.archaic.example.test to work.archaic.minau;
 }
 ```
 
-A suite normally resembles:
+Use one public suite record per file, with package-private case records underneath. For example, `ArithmeticTests.java`:
 
 ```java
-public final class ExampleTest implements TestSuite {
-    @Test
-    public void returnsExpectedValue() {
-        var actual = Example.perform();
-        assert actual.equals("expected") : "Unexpected result: " + actual;
+package work.archaic.example.test;
+
+import java.util.Collection;
+import work.archaic.service.test.v02.TestCase;
+import work.archaic.service.test.v02.TestSuite;
+import work.archaic.service.test.v02.TestTrail;
+
+public record ArithmeticTests() implements TestSuite {
+    @Override
+    public void cases(Collection<TestCase> cases) {
+        cases.add(new Addition(2, 3, 5));
+        cases.add(new Addition(-1, 1, 0));
+        for (int value = 0; value < 5; value++) {
+            cases.add(new Addition(value, 0, value));
+        }
+    }
+}
+
+record Addition(int left, int right, int expected) implements TestCase {
+    @Override
+    public void run(TestTrail trail) {
+        int actual = Math.addExact(left, right);
+        trail.note("Actual sum: " + actual);
+        assert actual == expected : "Expected sum: " + expected;
     }
 }
 ```
 
-The test launcher normally includes:
+Replace the illustrative JDK arithmetic with the production behavior being tested. Register case data only in `cases`; acquire resources and create mutable fixtures inside `run`, using try-with-resources where appropriate. Do not keep the registration collection or modify it after returning. Minau snapshots it, then executes each registration independently. Use loops for data-driven cases; no parameterized-test machinery is needed. See conventions for trail lifetime, failure behavior and concurrency rules.
+
+Include Minau, the catalog, production and test modules in compile roots. The test module depends on the catalog API, not the runner implementation. Keep source links to sibling `minau` and `service-catalog` checkouts explicit. The test launcher normally includes:
 
 ```text
 -ea
@@ -171,7 +193,9 @@ The test launcher normally includes:
 work.archaic.example.test
 ```
 
-Keep `-m` and its main-module argument together as required by the project's established argument-file form. For multiple test modules, follow the installed Minau version's documented comma-separated syntax.
+Compile first, then launch from the project root so Minau can scan `out/<module-name>`. Keep `-m` and its main-module argument together as required by the project's established argument-file form. For multiple modules, supply comma-separated names both to `--add-modules` and to Minau. Add `--debug` after the main class argument for per-case completion status.
+
+For existing v01 suites, keep `work.archaic.service.test.v01.TestSuite`, zero-argument `@Test` methods and qualified `opens <test-package> to work.archaic.minau`. A module can contain both versions, but a suite should implement only one. Do not rewrite published v01 contracts to introduce v02 behavior.
 
 ## Validate a change
 
@@ -231,7 +255,7 @@ Identify whether the consumer is missing `requires` or the producer intentionall
 
 ### Reflective access failure in tests
 
-Prefer a qualified `opens <test-package> to work.archaic.minau` in the test descriptor. Do not add `--add-opens` globally unless a repository-local constraint requires it.
+For v01 annotated methods, retain a qualified `opens <test-package> to work.archaic.minau`. For v02, check that the suite is public, has a public no-argument constructor, and its package is exported to `work.archaic.minau`; package-private cases are invoked through TestCase and need no reflective access. Do not add global `--add-opens` to fix v02 case visibility.
 
 ### Assertions appear to pass unexpectedly
 

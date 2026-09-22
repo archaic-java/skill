@@ -60,7 +60,7 @@ Some established projects use `args/` instead of `cmd/`. change them and their r
 - Give tests their own `<production-module>.test` module.
 - Do not export implementation packages by default.
 - Use `requires transitive` only when consumers of the current module's public API must also read the dependency.
-- Use `opens <test-package> to work.archaic.minau` for Minau discovery rather than opening the whole module.
+- For Minau v02, export the suite package, preferably with `exports <test-package> to work.archaic.minau`; case records need no reflective access. Retain qualified `opens` for v01 annotated-method discovery only.
 - Keep `module-info.java` changes in the same change set as the Java code that needs them.
 
 A direct API is simpler than a service boundary when the implementation is intrinsic to the module. Introduce a service when consumers should depend on a capability independently of its provider.
@@ -150,20 +150,22 @@ Treat each published version package as immutable. A breaking signature or seman
 
 ## Testing
 
-When the project uses Minau:
+Prefer `work.archaic.service.test.v02` for new Minau tests when the selected catalog and runner support it:
 
-- Put tests in a separate named module.
-- Require the production module and `work.archaic.service.catalog`.
-- Export the package containing suites and open it specifically to `work.archaic.minau`.
-- Implement `work.archaic.service.test.v01.TestSuite`.
-- Annotate zero-argument instance methods with `@Test`.
-- Use Java `assert` with an explanatory failure message.
-- Run the JVM with `-ea`.
-- Add the test module with `--add-modules` and pass its name to Minau's main class.
+- Put tests in a separate named module requiring the production module and `work.archaic.service.catalog`.
+- Organize each test file around a public zero-component record implementing `TestSuite`. Register instances synchronously in `void cases(Collection<TestCase> cases)` using `cases.add(...)` and ordinary loops.
+- Define package-private records implementing `TestCase` in the same file. Their components hold inputs and expected results; `void run(TestTrail trail) throws Exception` performs verification. Top-level record names must be unique within the package. Records are a convention, not a runtime requirement.
+- Export the suite package to `work.archaic.minau`. No annotations, reflective case invocation, `opens`, or ServiceLoader suite registration are needed for v02. Suite discovery still scans selected modules and requires a public no-argument constructor.
+- Use Java `assert` with explanatory messages and run with `-ea`. Add test modules with `--add-modules` and pass their names to Minau's main class. Run from the project root: discovery currently scans `out/<module-name>`.
+- Treat each registration as an independent test, including duplicates. Minau identifies it by suite, registration ordinal and case `toString()`; default record descriptions include the input data.
+- Let Minau own the mutable registration collection. Do not retain it or modify it asynchronously. Minau validates a snapshot before executing a suite's cases; invalid registration fails the suite without running partial cases. Empty suites are valid; null cases are not.
+- Create mutable fixtures and acquire/close resources inside `run`. Cases run concurrently on virtual threads; records are only shallowly immutable. v02 has no suite setup/teardown hooks. Complete asynchronous work before returning.
+- Add useful intermediate evidence with `trail.note(String)`. A trail is valid only on its case's thread during execution. Successful trails are discarded; failures include retained notes. Normal return passes; escaping exceptions or errors fail. Catch and verify expected exceptions inside the case.
+- Keep test trails independent of application logging; do not wrap cases in Peep goals or add a logging provider dependency for testing. Minau bounds retained evidence and reports loss; check the runner's documentation for current limits.
 
-Test observable contracts and edge cases. Keep tests independent because a runner may execute them concurrently. Use `setup()` and `teardown()` only for suite-level resources, and preserve the original failure if cleanup also fails.
+Preserve existing v01 `TestSuite` / `@Test` suites and their qualified `opens` unless migration is requested. Retain their existing setup/teardown behavior; do not mix both TestSuite versions on one type. Preserve purpose-built main-method integration or compatibility tests where they better exercise process boundaries or JDK compatibility.
 
-An established project may contain purpose-built main-method integration or compatibility tests. Preserve that testing style where it tests process boundaries or JDK compatibility better than an in-process suite.
+Test observable contracts and edge cases. See the Minau workflow for a complete file and launcher example, and the [catalog contract](https://github.com/archaic-java/service-catalog/blob/main/docs/test-v02.md) for precise semantics.
 
 ## Source and documentation style
 
@@ -180,8 +182,8 @@ An established project may contain purpose-built main-method integration or comp
 These repositories illustrate the school but are examples, not a substitute for local instructions:
 
 - `archaic-work/rami`: small application, separate test module, argument-file commands, source-linked Minau and service catalog.
-- `archaic-work/minau`: JDK-first test runner and test-service consumer.
-- `archaic-work/contract`: versioned service catalog.
+- `archaic-java/minau`: JDK-first test runner and test-service consumer.
+- `archaic-java/service-catalog`: versioned service catalog.
 - `archaic-work/jules`: JPMS service provider with an intentional modular binary dependency.
 
 If inspecting them online, use the current repository state and note that conventions can evolve.
