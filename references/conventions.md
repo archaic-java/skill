@@ -22,7 +22,8 @@ The school favors explicit mechanics over ecosystem convenience:
 3. **Commands as build interface.** Checked-in argument files make the compiler and launcher invocation reviewable and reproducible without a build-tool model.
 4. **Source-level composition.** Small sibling projects can be compiled together through module-directory links rather than published merely to satisfy a local build.
 5. **Contracts before containers.** Java interfaces plus `ServiceLoader` supply decoupling without a dependency-injection framework.
-6. **Small code over scaffolding.** Add machinery only when it removes more complexity than it creates.
+6. **Intent in code.** Express an application's distinct user goals with named Goals; keep their steps as ordinary methods.
+7. **Small code over scaffolding.** Add machinery only when it removes more complexity than it creates.
 
 These are decision criteria, not permission to rewrite a working repository. Match local conventions and preserve deliberate exceptions.
 

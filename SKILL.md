@@ -1,6 +1,6 @@
 ---
 name: archaic-java
-description: "Create, maintain, extend, diagnose, or review projects in the school of Archaic Java: JDK 25, explicit JPMS modules, javac/java argument files, source-linked or modular-JAR dependencies, JDK-first implementations, Minau tests, versioned service contracts, and the Archaic Java web design system. Use for archaic.work repositories or when the user explicitly asks for Archaic Java conventions or visual design. Do not impose these conventions on unrelated Java projects."
+description: "Create, maintain, extend, diagnose, or review projects in the school of Archaic Java: JDK 25, explicit JPMS modules, javac/java argument files, source-linked or modular-JAR dependencies, JDK-first implementations, intent-expressing Goals, Minau tests, versioned service contracts, and the Archaic Java web design system. Use for archaic.work repositories or when the user explicitly asks for Archaic Java conventions or visual design. Do not impose these conventions on unrelated Java projects."
 ---
 
 # Archaic Java
@@ -30,6 +30,10 @@ User instructions and repository-local instructions take precedence over this sk
 - Keep changes small and legible. Avoid generated source, annotation processors, broad reflection, framework lifecycle magic, and configuration whose effect cannot be seen from the command line and module descriptors.
 
 Read [references/conventions.md](references/conventions.md) when creating a project, designing module or service boundaries, adding dependencies, or reviewing architectural fit.
+
+## Express intent with Goal
+
+An application normally fulfills many distinct user goals, such as placing, cancelling and tracking orders. Express each complete intent with a named `Goal`; use ordinary methods for its steps. This is code style that communicates purpose, even without logging. Keep each attempt, including its response, inside `goal.run(...)`. Normal return means success; let failures escape. Use logging v02; read [API details](references/goals.md) when implementing it.
 
 ## Work through the repository's public commands
 
