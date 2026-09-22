@@ -31,13 +31,9 @@ User instructions and repository-local instructions take precedence over this sk
 
 Read [references/conventions.md](references/conventions.md) when creating a project, designing module or service boundaries, adding dependencies, or reviewing architectural fit.
 
-## Express application intent with Goal
+## Express intent with Goal
 
-Treat `work.archaic.service.logging.v02.Goal` as part of the code style: name and delimit the complete intent an application is attempting to fulfill. Its value includes making the purpose and completion boundary visible to readers, even when the body needs no diagnostic notes. Failure diagnostics are one benefit of that explicit boundary.
-
-Use goals at meaningful application entry points, such as placing an order, importing a document or publishing a release. Keep the steps as ordinary methods inside `goal.run(...)`, including communicating the outcome when that belongs to the intent. Do not turn each helper, database call or implementation step into a goal. Preserve existing project conventions when no goal integration is requested.
-
-Read [references/goals.md](references/goals.md) when designing application operations, introducing goals, or changing logging and failure handling. Use the v02 contract through `Diagnostics` and `Log`; keep provider selection explicit and preserve the run-only, exception-based completion semantics.
+An application normally fulfills many distinct user goals, such as placing, cancelling and tracking orders. Express each complete intent with a named `Goal`; use ordinary methods for its steps. This is code style that communicates purpose, even without logging. Keep each attempt, including its response, inside `goal.run(...)`. Normal return means success; let failures escape. Use logging v02; read [API details](references/goals.md) when implementing it.
 
 ## Work through the repository's public commands
 
