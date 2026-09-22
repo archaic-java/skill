@@ -9,6 +9,7 @@ Use this reference when creating a project, choosing module boundaries, adding d
 - Module and package design
 - Dependencies
 - Service contracts and providers
+- Application intent and goals
 - Testing
 - Source and documentation style
 - Existing examples
@@ -22,7 +23,8 @@ The school favors explicit mechanics over ecosystem convenience:
 3. **Commands as build interface.** Checked-in argument files make the compiler and launcher invocation reviewable and reproducible without a build-tool model.
 4. **Source-level composition.** Small sibling projects can be compiled together through module-directory links rather than published merely to satisfy a local build.
 5. **Contracts before containers.** Java interfaces plus `ServiceLoader` supply decoupling without a dependency-injection framework.
-6. **Small code over scaffolding.** Add machinery only when it removes more complexity than it creates.
+6. **Intent in code.** Use named Goals to make complete application intents and their execution boundaries visible; use ordinary methods for the steps within them.
+7. **Small code over scaffolding.** Add machinery only when it removes more complexity than it creates.
 
 These are decision criteria, not permission to rewrite a working repository. Match local conventions and preserve deliberate exceptions.
 
@@ -147,6 +149,14 @@ module work.archaic.example.consumer {
 Load providers explicitly with `ServiceLoader.load(Example.class)` and define what zero or multiple providers mean. Do not hide selection in a global container.
 
 Treat each published version package as immutable. A breaking signature or semantic change creates `v02`; keep `v01` while consumers or providers still use it.
+
+## Application intent and goals
+
+Model a meaningful application intent with `work.archaic.service.logging.v02.Goal`. Choose its name and boundary from the intended outcome, not from a logging category or the implementing class. A goal such as `orders.place` expresses what the application is attempting; loading inventory and persisting an order are steps within that intent. Treat this as a readability and code-organization convention, including operations that need no trail notes.
+
+Keep the complete attempt in `goal.run(...)`, including response handling when applicable. Reuse the goal for repeated attempts; construction does not execute it. Keep ordinary return-valued functions inside the boundary. Goals do not imply transactions, rollback or business validation. Let failures escape the boundary; normal return is success. Do not invent nested goals or a separate outcome API.
+
+Use the catalog contracts and explicit provider selection; Peep is a runtime implementation. Follow the [goal guidance](goals.md) for examples, scope restrictions, failure responses and the distinction between temporary trail evidence and immediate log output. Keep Minau's TestCase/TestTrail independent of application goals.
 
 ## Testing
 

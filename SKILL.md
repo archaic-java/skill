@@ -1,6 +1,6 @@
 ---
 name: archaic-java
-description: "Create, maintain, extend, diagnose, or review projects in the school of Archaic Java: JDK 25, explicit JPMS modules, javac/java argument files, source-linked or modular-JAR dependencies, JDK-first implementations, Minau tests, versioned service contracts, and the Archaic Java web design system. Use for archaic.work repositories or when the user explicitly asks for Archaic Java conventions or visual design. Do not impose these conventions on unrelated Java projects."
+description: "Create, maintain, extend, diagnose, or review projects in the school of Archaic Java: JDK 25, explicit JPMS modules, javac/java argument files, source-linked or modular-JAR dependencies, JDK-first implementations, intent-expressing Goals, Minau tests, versioned service contracts, and the Archaic Java web design system. Use for archaic.work repositories or when the user explicitly asks for Archaic Java conventions or visual design. Do not impose these conventions on unrelated Java projects."
 ---
 
 # Archaic Java
@@ -30,6 +30,14 @@ User instructions and repository-local instructions take precedence over this sk
 - Keep changes small and legible. Avoid generated source, annotation processors, broad reflection, framework lifecycle magic, and configuration whose effect cannot be seen from the command line and module descriptors.
 
 Read [references/conventions.md](references/conventions.md) when creating a project, designing module or service boundaries, adding dependencies, or reviewing architectural fit.
+
+## Express application intent with Goal
+
+Treat `work.archaic.service.logging.v02.Goal` as part of the code style: name and delimit the complete intent an application is attempting to fulfill. Its value includes making the purpose and completion boundary visible to readers, even when the body needs no diagnostic notes. Failure diagnostics are one benefit of that explicit boundary.
+
+Use goals at meaningful application entry points, such as placing an order, importing a document or publishing a release. Keep the steps as ordinary methods inside `goal.run(...)`, including communicating the outcome when that belongs to the intent. Do not turn each helper, database call or implementation step into a goal. Preserve existing project conventions when no goal integration is requested.
+
+Read [references/goals.md](references/goals.md) when designing application operations, introducing goals, or changing logging and failure handling. Use the v02 contract through `Diagnostics` and `Log`; keep provider selection explicit and preserve the run-only, exception-based completion semantics.
 
 ## Work through the repository's public commands
 

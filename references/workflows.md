@@ -10,6 +10,7 @@ Use this reference for concrete repository creation, feature extension, dependen
 - Add a source dependency
 - Add a binary dependency
 - Add a service contract and provider
+- Add application goals
 - Add Minau tests
 - Validate a change
 - Diagnose failures
@@ -135,6 +136,16 @@ Do not solve a missing module descriptor with a class-path fallback.
 8. Test the provider through the contract.
 
 If changing an existing version would break source, binary, or semantic compatibility, create the next versioned package.
+
+## Add application goals
+
+1. Identify the complete application intent and its entry point. Choose a name communicating the intended outcome; do not start by selecting messages to log.
+2. Read [goals.md](goals.md). Require the catalog, declare `uses` for services loaded by the module, and resolve one chosen `Diagnostics` and `Log` at composition time. Keep consumers independent of Peep implementation types.
+3. Create a reusable named Goal and place the complete attempt inside `run`, including response handling when it belongs to the intent. Keep helper methods and return-valued computations ordinary Java.
+4. Add `diagnostics.note(...)` or `Trail.note(...)` only where useful evidence exists. A goal needs no notes to communicate intent. Use `log.write(...)` for immediate information.
+5. Ensure unsuccessful attempts throw through the goal boundary. When sending a failure response inside the goal, rethrow the original failure; preserve it if response handling also fails. Do not treat an HTTP error status or failure-valued result as an automatic failed goal.
+6. Check the actual execution boundary when using `newExecutor()`: exceptions must reach it, work gets independent roots, and nested goals and trail inheritance are unsupported. Use the handler boundary if an enclosing server task catches exceptions.
+7. Compile and verify success, failure propagation and response behavior at the relevant boundary. Use independent Minau TestTrail evidence for tests; application goals may execute inside those test cases.
 
 ## Add Minau tests
 
