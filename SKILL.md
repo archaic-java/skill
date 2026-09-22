@@ -52,7 +52,7 @@ When adding or changing functionality:
 1. Identify the owning module and whether the change is implementation, public API, service contract, provider, CLI, or test-only behavior.
 2. Change the narrowest suitable package and public surface.
 3. Update `module-info.java` and the relevant compile/run/test argument files together with the code.
-4. Add or update a separate test module. For new Minau tests, prefer testing v02: a public suite record registers package-private case records through `cases(Collection<TestCase>)`; each case implements `run(TestTrail)`. Use Java `assert` and `-ea`. Preserve existing v01 annotated suites unless migration is requested, and check that the selected catalog and runner support v02. See the testing workflow for a complete example.
+4. Add or update a separate test module. For new Minau tests, prefer testing v02: a public suite record registers package-private case records through `cases(Collection<TestCase>)`; each case implements `run(TestTrail)`. Use Java `assert condition : "reason";` for every assertion, with a short explanation of the violated expectation that makes it a test failure, and run with `-ea`. Do not create assertion helper methods or assertion wrappers; keep checks inline or propose an extension to the test API. Preserve existing v01 annotated suites unless migration is requested, and check that the selected catalog and runner support v02. See the testing workflow for a complete example.
 5. Compile, test, and run the relevant entry point. Also run lint or documentation commands when present.
 6. Inspect the final diff and confirm no compiled output, downloaded JDK, or incidental dependency files entered version control.
 

@@ -176,10 +176,13 @@ record Addition(int left, int right, int expected) implements TestCase {
     public void run(TestTrail trail) {
         int actual = Math.addExact(left, right);
         trail.note("Actual sum: " + actual);
-        assert actual == expected : "Expected sum: " + expected;
+        assert actual == expected
+            : "Addition must produce the specified sum: expected " + expected + ", got " + actual;
     }
 }
 ```
+
+Use Java `assert condition : "reason";` for every assertion, including negative and expected-exception checks. The short message must explain which expectation was violated and why that means the test failed. Do not introduce assertion helper methods or wrappers: keep verification inline, or propose a test API extension when that would improve readability.
 
 Replace the illustrative JDK arithmetic with the production behavior being tested. Register case data only in `cases`; acquire resources and create mutable fixtures inside `run`, using try-with-resources where appropriate. Do not keep the registration collection or modify it after returning. Minau snapshots it, then executes each registration independently. Use loops for data-driven cases; no parameterized-test machinery is needed. See conventions for trail lifetime, failure behavior and concurrency rules.
 
