@@ -1,6 +1,6 @@
 ---
 name: archaic-java
-description: "Create, maintain, extend, diagnose, or review projects in the school of Archaic Java: JDK 25, explicit JPMS modules, javac/java argument files, source-linked or modular-JAR dependencies, JDK-first implementations, object logging with caller-thread failure trails, Minau tests, versioned service contracts, and the Archaic Java web design system. Use for archaic.work repositories or when the user explicitly asks for Archaic Java conventions or visual design. Do not impose these conventions on unrelated Java projects."
+description: "Create, maintain, extend, diagnose, or review projects in the school of Archaic Java: JDK 25, explicit JPMS modules, javac/java argument files, source-linked or modular-JAR dependencies, JDK-first implementations, object logging with configured caller-thread contexts, Minau tests, versioned service contracts, and the Archaic Java web design system. Use for archaic.work repositories or when the user explicitly asks for Archaic Java conventions or visual design. Do not impose these conventions on unrelated Java projects."
 ---
 
 # Archaic Java
@@ -31,9 +31,9 @@ User instructions and repository-local instructions take precedence over this sk
 
 Read [references/conventions.md](references/conventions.md) when creating a project, designing module or service boundaries, adding dependencies, or reviewing architectural fit.
 
-## Log with caller-thread trails
+## Log with configured contexts
 
-Use `work.archaic.service.logging.v03` and Culpa for new application logging. Implement `Logging` to obtain `logImmediately`, `logOnFailure` and `logOnDebug` without logger fields. Select one `Log` explicitly at composition time and install it once with `Logging.install`. Wrap a complete execution in `Logging.trail(...)`; it runs synchronously on the calling thread and requires no separate thread or executor. Normal completion discards evidence; an escaping exception publishes it and is rethrown unchanged. Mark handled failures with `Logging.failure(...)`. Read [API details](references/logging.md) when implementing logging.
+Use `work.archaic.service.logging.v03` and Culpa for new application logging. Implement `Logging` to obtain `logImmediately`, `logOnFailure` and lazy `logOnDebug(() -> ...)` without logger fields. Select one `Log` explicitly at composition time and create configured, single-use contexts. Use `context.run(...)` for void work or `context.call(...)` for returned values; both execute on the calling thread and preserve checked exceptions. Discard evidence on success; publish once for an escaping exception/error or explicit `context.fail(reason)`. Use `Configuration.text(debug, stream)` for standard rendering to a chosen destination. Give worker tasks independent contexts. Read [API and migration details](references/logging.md) when implementing logging.
 
 ## Work through the repository's public commands
 
