@@ -1,6 +1,6 @@
 ---
 name: archaic-java
-description: "Create, maintain, extend, diagnose, or review projects in the school of Archaic Java: JDK 25, explicit JPMS modules, javac/java argument files, source-linked or modular-JAR dependencies, JDK-first implementations, intent-expressing Goals, Minau tests, versioned service contracts, and the Archaic Java web design system. Use for archaic.work repositories or when the user explicitly asks for Archaic Java conventions or visual design. Do not impose these conventions on unrelated Java projects."
+description: "Create, maintain, extend, diagnose, or review projects in the school of Archaic Java: JDK 25, explicit JPMS modules, javac/java argument files, source-linked or modular-JAR dependencies, JDK-first implementations, object logging with caller-thread failure trails, Minau tests, versioned service contracts, and the Archaic Java web design system. Use for archaic.work repositories or when the user explicitly asks for Archaic Java conventions or visual design. Do not impose these conventions on unrelated Java projects."
 ---
 
 # Archaic Java
@@ -31,9 +31,9 @@ User instructions and repository-local instructions take precedence over this sk
 
 Read [references/conventions.md](references/conventions.md) when creating a project, designing module or service boundaries, adding dependencies, or reviewing architectural fit.
 
-## Express intent with Goal
+## Log with caller-thread trails
 
-An application normally fulfills many distinct user goals, such as placing, cancelling and tracking orders. Express each complete intent with a named `Goal`; use ordinary methods for its steps. This is code style that communicates purpose, even without logging. Keep each attempt, including its response, inside `goal.run(...)`. Normal return means success; let failures escape. Use logging v02; read [API details](references/goals.md) when implementing it.
+Use `work.archaic.service.logging.v03` and Culpa for new application logging. Implement `Logging` to obtain `logImmediately`, `logOnFailure` and `logOnDebug` without logger fields. Select one `Log` explicitly at composition time and install it once with `Logging.install`. Wrap a complete execution in `Logging.trail(...)`; it runs synchronously on the calling thread and requires no separate thread or executor. Normal completion discards evidence; an escaping exception publishes it and is rethrown unchanged. Mark handled failures with `Logging.failure(...)`. Read [API details](references/logging.md) when implementing logging.
 
 ## Work through the repository's public commands
 

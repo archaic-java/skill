@@ -22,7 +22,7 @@ The school favors explicit mechanics over ecosystem convenience:
 3. **Commands as build interface.** Checked-in argument files make the compiler and launcher invocation reviewable and reproducible without a build-tool model.
 4. **Source-level composition.** Small sibling projects can be compiled together through module-directory links rather than published merely to satisfy a local build.
 5. **Contracts before containers.** Java interfaces plus `ServiceLoader` supply decoupling without a dependency-injection framework.
-6. **Intent in code.** Express an application's distinct user goals with named Goals; keep their steps as ordinary methods.
+6. **Intent in code.** Name ordinary methods for application intents; collect failure evidence with `Logging.trail(...)` around a complete execution on the calling thread.
 7. **Small code over scaffolding.** Add machinery only when it removes more complexity than it creates.
 
 These are decision criteria, not permission to rewrite a working repository. Match local conventions and preserve deliberate exceptions.
@@ -162,7 +162,7 @@ Prefer `work.archaic.service.test.v02` for new Minau tests when the selected cat
 - Let Minau own the mutable registration collection. Do not retain it or modify it asynchronously. Minau validates a snapshot before executing a suite's cases; invalid registration fails the suite without running partial cases. Empty suites are valid; null cases are not.
 - Create mutable fixtures and acquire/close resources inside `run`. Cases run concurrently on virtual threads; records are only shallowly immutable. v02 has no suite setup/teardown hooks. Complete asynchronous work before returning.
 - Add useful intermediate evidence with `trail.note(String)`. A trail is valid only on its case's thread during execution. Successful trails are discarded; failures include retained notes. Normal return passes; escaping exceptions or errors fail. Catch and verify expected exceptions inside the case.
-- Keep test trails independent of application logging; do not wrap cases in Peep goals or add a logging provider dependency for testing. Minau bounds retained evidence and reports loss; check the runner's documentation for current limits.
+- Keep Minau TestTrail independent of application logging. Use it for test evidence; add Culpa and application trails only when logging itself is under test. Minau bounds retained evidence and reports loss; check the runner's documentation for current limits.
 
 Preserve existing v01 `TestSuite` / `@Test` suites and their qualified `opens` unless migration is requested. Retain their existing setup/teardown behavior; do not mix both TestSuite versions on one type. Preserve purpose-built main-method integration or compatibility tests where they better exercise process boundaries or JDK compatibility.
 
