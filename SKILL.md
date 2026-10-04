@@ -32,6 +32,19 @@ User instructions and repository-local instructions take precedence over this sk
 
 Read [references/conventions.md](references/conventions.md) when creating a project, designing module or service boundaries, adding dependencies, or reviewing architectural fit.
 
+## Keep control flow flat and validate before work
+
+When writing or reviewing Java, read [coding guidance and examples](references/coding.md). Apply these rules to production and test code:
+
+- Start methods with terminating guards for invalid inputs, unmet preconditions and trivial outcomes. Use `throw` or `return`; use `continue` for rejected loop items. Continue directly after a terminating guard without an `else` around the remaining work.
+- Do not nest conditional decisions. Use guards or extract a coherent, meaningfully named operation. Do not move the same complexity into arbitrary helpers, lambdas, streams, nested ternaries or compound boolean expressions.
+- Check applicable preconditions before expensive computation, resource acquisition or externally visible changes. Respect dependencies and documented failure order; prefer cheap, decisive checks first when correctness permits. Check later-dependent conditions as soon as their information becomes available.
+- Keep exception handling around the smallest coherent operation needing recovery or translation. Avoid nested `try`/`catch`; preserve resource lifetime with try-with-resources and preserve cleanup, atomicity and exception semantics. Check mutable shared state and act under the required lock or transaction.
+- Use custom checked exceptions for foreseeable unhappy paths that callers must handle or deliberately propagate. Reserve unchecked exceptions for programming errors and use ordinary return values for expected alternatives within successful operation. Name failures in domain terms, supply useful caller information and preserve causes when translating underlying failures.
+- Declare shared exception types in the owning API or service contract; do not expose provider-specific exceptions through that boundary. Preserve published contracts and review compatibility before changing an existing exception signature or failure behavior.
+
+Treat nested reasoning as the problem, rather than imposing a universal indentation limit. Retain nesting only for a concrete correctness or readability reason, explain that reason during completion, and keep any non-obvious invariant beside the code. Existing style alone does not justify new nested decisions; preserve deliberate local exceptions and avoid unrelated refactoring.
+
 ## Log with configured contexts
 
 Use `work.archaic.service.logging.v03` and Culpa for new application logging. Prefer objects implementing `Logging`, lazy debug computations and configured contexts around complete application intents. Keep provider selection explicit and application policy local. Read [application logging guidance](references/logging.md) for composition and migration, then the linked catalog references for exact API semantics and provider guidance for implementation details.
@@ -77,6 +90,8 @@ Provide a project maintenance skill as the shared entry point for humans and cod
 Keep shared engineering conventions in Archaic Java, portable contracts and conformance expectations in the relevant catalog, and implementation/configuration guidance in the owning project. Keep precise API declarations and Javadoc beside their source. Short linked summaries and examples are useful; avoid independently maintained specifications of the same fact. Read [references/documentation.md](references/documentation.md) when creating, reorganizing, reviewing or resolving ownership of documentation.
 
 ## Verify completion
+
+Inspect every changed Java method for nested decisions, unnecessary `else` branches, overly broad exception scopes, work performed before applicable guards and foreseeable failures expressed as unchecked exceptions. Refactor violations before completion. Report any retained nesting or exception-policy deviation with its concrete reason; a stylistic preference is not sufficient. Verify observable failure behavior and, where relevant, that rejected inputs do not trigger expensive work or external changes.
 
 Report the exact checks run and their results. For Java changes, the JPMS graph must compile, tests must run with assertions enabled, and the intended module entry point must launch successfully when the project has one. For visual-only changes, verify the affected layout, assets, and interactions as described in the design-system reference; no Java build is required when Java behavior is untouched.
 
