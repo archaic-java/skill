@@ -172,7 +172,7 @@ Read the [testing workflow](workflows.md#add-minau-tests) for task routing. The 
 - Prefer small classes, interfaces, records, and plain methods over framework abstractions.
 - Use current language features when they improve clarity and the selected JDK supports them.
 - Keep mutable global state rare and explicit.
-- Use checked or domain-specific exceptions when callers can act on a failure; include a useful message.
+- Apply the [coding guidance](coding.md) to method structure, guard ordering and failure behavior. Use custom checked exceptions for foreseeable unhappy paths callers must handle or deliberately propagate; reserve unchecked exceptions for programming errors. Keep expected successful alternatives as ordinary return values.
 - Write Javadoc for exported contracts and non-obvious invariants. Keep implementation comments focused on why.
 - Keep CLI output and exit codes deliberate. Use the repository's logging convention rather than introducing a new facade casually.
 

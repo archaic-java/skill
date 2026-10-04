@@ -90,7 +90,7 @@ For each requested behavior:
 
 1. Follow the project skill’s relevant task links and locate the module that owns the behavior. Read the selected catalog contract when applicable.
 2. Decide whether the existing API can express the change without a new public type.
-3. Implement the smallest vertical slice, including error behavior.
+3. Read [coding guidance](coding.md) and implement the smallest vertical slice, including guards before work, flat control flow and custom checked exceptions for foreseeable unhappy paths.
 4. Update the module descriptor if package visibility or readability changes.
 5. Update root-module lists or launcher options if the graph changes.
 6. Add tests at the closest observable boundary.
@@ -171,6 +171,8 @@ git diff
 
 Confirm that:
 
+- every changed Java method follows the [coding guidance](coding.md), with concrete reasons reported for any retained nesting or exception-policy deviation;
+- applicable guards precede expensive work and external changes, and rejected-input checks observe this where relevant;
 - the required JDK executed both compiler and launcher;
 - no class-path option was introduced;
 - all module links resolve;
