@@ -1,122 +1,72 @@
-# Logging contexts
+# Application logging guidance
 
-Use `work.archaic.service.logging.v03` from `work.archaic.service.catalog` and
-[Culpa](https://github.com/archaic-java/culpa) as the runtime provider. Depend on catalog types
-in application code; avoid importing provider implementation classes.
+Use logging v03 and Culpa for new application logging. This reference owns Archaic
+Java's application-design recommendations; the catalog owns API semantics and Culpa
+owns provider mechanics. Read the
+[catalog skill](https://github.com/archaic-java/service-catalog/blob/main/skills/maintain-service-catalog/SKILL.md)
+and its [logging v03 guide](https://github.com/archaic-java/service-catalog/blob/main/skills/maintain-service-catalog/references/logging-v03.md)
+when composing or changing logging. Inspect declarations at the dependency revision
+actually used; the links to `main` are navigation, not version pins.
 
-## Contents
+## Compose explicitly
 
-- Compose the provider and output
-- Log from objects
-- Scope execution and outcome
-- Keep thread boundaries explicit
-- Migrate applications and verify
+Select the logging provider at application composition, using catalog types in
+application code. Follow the contract's selection rules and the provider project's
+checkout/runtime guidance. Record provider choice and dependency revision in the
+application's maintenance documentation.
 
-## Compose the provider and output
+Choose output, debug policy and scope boundaries explicitly for the application.
+Use the catalog's standard text rendering when appropriate; supply custom sinks when
+protocol or CLI needs require another format. Keep log output off a protocol channel:
+LSP logs belong on stderr. Decide stream ownership and expected-error rendering in
+the application, with the catalog's sink semantics as constraints.
 
-Declare `requires work.archaic.service.catalog` and `uses work.archaic.service.logging.v03.Log`
-in the composition module. Resolve `work.archaic.culpa` at launch. Select one factory explicitly:
+Use provider defaults only after checking their documented behavior. Keep exact
+Configuration constructors, retention bounds, field clipping and publication semantics
+in catalog/provider references rather than maintaining another specification here.
 
-```java
-var providers = ServiceLoader.load(Log.class).stream().toList();
-if (providers.size() != 1)
-    throw new IllegalStateException("Exactly one logging provider required");
-var logging = providers.getFirst().get();
-var settings = Configuration.text(false, System.err);
-```
+## Model application intents
 
-Import `java.util.ServiceLoader` and the logging v03 types. Reuse the stateless factory and
-immutable configuration; create a fresh context per complete execution. Capture debug, clock,
-output and retention at creation. Avoid global installation or mutable provider-wide debug state.
-Use the provider's `logging.context()` defaults only when stdout is appropriate.
+Prefer ordinary methods and objects implementing `Logging` over named logging goals
+or logger fields. Choose scopes around complete operational intents: one command,
+request handler or independently executing task. Include response handling when it
+belongs to the operation. Reuse the current context through ordinary helper calls;
+do not create another context for every method.
 
-Use `Configuration.text(debug, stream)` for standard timestamped text to stdout, stderr or another
-PrintStream. Reuse catalog `TextOutput` with its `entry` and `failure` methods when supplying a
-custom clock or limits. Render complete reports atomically across contexts sharing the stream;
-leave stream ownership to the application. Follow PrintStream error semantics; do not imply durability.
-Supply application-defined entry/report sinks for a different format or concise expected CLI errors.
-Require shared sinks to support concurrency. Route LSP logs exclusively to stderr.
+Use the catalog's void and value-returning context entry points for the relevant work,
+avoiding mutable holders solely to retrieve results. Put expensive debug computations
+inside lazy suppliers. Use failure evidence to explain an unsuccessful operation and
+immediate output for information whose publication belongs to the intent.
 
-Use the three-argument Configuration constructor for custom sinks and default UTC, 256 retained
-entries and 2048 UTF-16 units per field. Use the full constructor for a clock and retention limits
-(capacity >= 1, field limit >= 2). Keep the newest evidence, mark clipping and report dropped entries.
+Keep syntax diagnostics and ordinary domain results distinct from logging failures.
+For handled failures, apply the contract's explicit failure mechanism when the operation
+has failed; do not make every diagnostic or negative result a logging failure.
+Keep transactions, rollback and retry decisions in application code. Keep independently
+usable service providers and pure helpers free of an incidental logging-scope requirement.
 
-## Log from objects
+## Preserve existing execution boundaries
 
-Implement `Logging` without a logger field:
+Apply the catalog's ownership and nesting rules to the application's concurrency.
+Give independently executing worker tasks their own scopes and use the application's
+completion mechanism to observe failures. Keep transport/parser concurrency when it
+serves responsiveness; do not introduce threads merely to establish logging.
+Do not add preview or structured-concurrency dependencies for this purpose.
+Read the catalog for exact binding restoration, thread confinement and outcome semantics.
 
-```java
-final class Orders implements Logging {
-    String place() throws IOException {
-        logOnFailure("Checking order requirements");
-        logOnDebug(() -> expensiveStateDescription());
-        // Perform the application work; let unrecovered failures escape.
-        logImmediately("Order placed");
-        return "accepted";
-    }
-}
-```
+## Migrate and verify application policy
 
-Use `logImmediately(String)` to publish now and `logOnFailure(String)` to retain evidence.
-Use `logOnDebug(Supplier<String>)` to compute and publish only when this context enables debug;
-put expensive work inside the lambda. Require a non-null supplier even when disabled; evaluate
-it exactly once on the caller thread when enabled and reject a null result. Propagate supplier
-exceptions/errors normally. Capture entry timestamps after lazy message computation.
-Use the default implementing-class `loggingName()` or override it for instance names.
-Require an active context for every logging method; reject logging outside a scope.
+Let the logging boundary own failure rendering and let outer catches choose exit
+status without reporting the same failure twice. Render composition failures separately
+when no context exists. Preserve compiler diagnostics, protocol framing and expected CLI
+errors; avoid duplicate-report flags introduced only to coordinate logging layers.
 
-## Scope execution and outcome
+Use [Knit](https://github.com/archaic-java/knit) as an example of a command boundary and
+[Shrink](https://github.com/archaic-java/shrink) for session/parser contexts and protocol
+separation. Read their current project guidance and dependency pins before adapting them.
+Document actual application choices and integration checks in the consuming project.
 
-Wrap complete work, including its response where appropriate:
-
-```java
-logging.context(settings).run(() -> application.execute());
-String outcome = logging.context(settings).call(() -> orders.place());
-```
-
-Use `run(Work<E>)` for void work and `call(Call<T, E>)` to return the exact value, including null,
-without a mutable holder. Preserve checked exception types. Run synchronously on the calling
-thread; logging creates no executor or thread. Share one single-use lifecycle between run and call;
-reject reentrant, concurrent or completed-context reuse. Reject null work before consuming a context.
-
-Discard evidence on normal completion unless explicitly marked failed. Publish once when an
-exception or error escapes, then rethrow the original throwable. Use `context.fail(reason)` or
-`Logging.context().fail(reason)` for a handled failure; keep the first reason and include subsequent
-evidence. Keep syntax diagnostics and other ordinary domain results separate from logging failures;
-do not infer failure from a returned value. Complete publication before returning a call result.
-
-Treat nested contexts as independent: temporarily replace the binding and restore the parent
-before publication/propagation. Recovering an inner failure leaves the parent successful; the same
-exception escaping both scopes fails both with their own evidence. Reuse the current context across
-ordinary helper calls rather than creating scopes for every method. Release evidence on every exit.
-Suppress sink failure onto an escaping application throwable; let sink failure after a marked normal
-return escape. Keep transactions, rollback and retries in application code.
-
-## Keep thread boundaries explicit
-
-Create independent contexts inside child tasks; ordinary threads do not inherit a context.
-Allow creation on one thread and execution on another, but confine active operations to the executing
-thread. Share configuration and thread-safe sinks, not active contexts. Observe task failures through
-the application's completion mechanism; fail a parent only when its own outcome requires it.
-Keep existing transport/parser concurrency when needed for responsiveness; remove threads whose
-only purpose was an old logging boundary. Do not add preview or structured-concurrency dependencies.
-
-## Migrate applications and verify
-
-Replace named Goals with ordinary operational methods/objects implementing Logging; keep pure
-helpers and independently usable service providers free of an implicit context requirement.
-Use one context per command or independently executing task. Let completion own failure rendering;
-let outer catches select exit status without reporting the same exception again. Render composition
-failures separately when no context exists. Preserve compiler diagnostics, protocol framing and
-expected CLI errors; avoid duplicate-report flags and switches created solely for logging.
-
-Use [Knit](https://github.com/archaic-java/knit) for a command boundary and
-[Shrink](https://github.com/archaic-java/shrink) for independent session/parser contexts and stderr
-protocol separation. Inspect current source and dependency pins before adapting either example.
-
-Keep Minau TestTrail independent. Use catalog `LoggingV03ProviderContract` for provider checks.
-Test successful evidence discard, handled/escaping failures, recovery, nullable call results,
-checked exceptions, disabled/enabled debug suppliers, sink failure and thread confinement where
-relevant. For protocol servers, verify real-process stdout framing with debug enabled.
-Consult the [catalog contract](https://github.com/archaic-java/service-catalog/blob/main/docs/logging-v03.md)
-for exact lifecycle, retention and text-rendering semantics.
+For provider compliance, follow the catalog's reusable cases and the provider project's
+verification guidance. For application integration, test the chosen scope boundaries,
+handled/escaping failure rendering and configured destinations as relevant. Protocol
+servers should verify real-process stdout framing with debug enabled. Keep Minau's test
+evidence independent; use its own maintenance guidance for test reports and trails.

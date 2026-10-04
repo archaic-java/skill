@@ -19,13 +19,15 @@ Use this reference for concrete repository creation, feature extension, dependen
 Run read-only discovery before proposing a change:
 
 ```shell
-rg --files -g 'AGENTS.md' -g 'README*' -g 'module-info.java' -g 'args/**' -g 'cmd/**'
+rg --files -g 'AGENTS.md' -g 'README*' -g 'skills/**/SKILL.md' -g 'module-info.java' -g 'args/**' -g 'cmd/**'
 find lib/src -maxdepth 1 -type l -printf '%p -> %l\n'
 find src -type f -name '*.java' | sort
 git status --short
 java --version
 javac --version
 ```
+
+Read the maintenance-skill foundation and follow the relevant task links before exploring implementation. Discover its actual location through README/AGENTS.md rather than assuming the conventional path. Read catalog guidance at the selected dependency revision when touching a service boundary. Use [documentation ownership](documentation.md) to distinguish shared conventions, portable contracts and local mechanics.
 
 Read the argument files as the executable build specification. Build a quick inventory of:
 
@@ -48,7 +50,7 @@ Do not assume that a directory named `cmd` contains executable shell scripts; it
 6. Add only required dependency links or modular JARs.
 7. Write the compiler and launcher argument files.
 8. Ignore `out/` and other generated artifacts.
-9. Add concise `AGENTS.md` and `README.md` files.
+9. Add README purpose, first use and canonical commands; add concise AGENTS.md routing. Create a shared maintenance skill with a compact foundation and task map, plus only the references already needed. Follow [documentation.md](documentation.md).
 10. Compile, test, and run from a clean `out/` directory.
 
 A minimal production descriptor can be:
@@ -86,13 +88,14 @@ Do not add empty placeholder modules, dependency directories, or service abstrac
 
 For each requested behavior:
 
-1. Locate the module that owns the behavior.
+1. Follow the project skill’s relevant task links and locate the module that owns the behavior. Read the selected catalog contract when applicable.
 2. Decide whether the existing API can express the change without a new public type.
 3. Implement the smallest vertical slice, including error behavior.
 4. Update the module descriptor if package visibility or readability changes.
 5. Update root-module lists or launcher options if the graph changes.
 6. Add tests at the closest observable boundary.
-7. Run compile, test, and the relevant application path.
+7. Update the owning documentation with changed behavior, commands and verification; link rather than copying another skill’s specification.
+8. Run compile, test, and the relevant application path.
 
 Avoid a broad refactor unless the feature exposes a concrete structural problem. Never edit a versioned service contract in place merely to make a provider change convenient.
 
@@ -125,80 +128,28 @@ Do not solve a missing module descriptor with a class-path fallback.
 
 ## Add a service contract and provider
 
-1. Define the smallest provider-neutral interface and its input, output, and exception types in `work.archaic.service.<capability>.vNN`.
+1. Read the selected catalog skill’s evolution and conformance guidance, then define the smallest provider-neutral interface and its input, output, and exception types in `work.archaic.service.<capability>.vNN`.
 2. Export that package from the service-catalog module.
-3. Add conformance tests to the catalog when all providers should satisfy the same behavior.
+3. Add reusable conformance cases tied to documented portable promises where useful; keep provider-specific fault/platform checks in the provider project.
 4. Implement the contract in a provider module without leaking provider types through the contract.
-5. Declare `provides Contract with Implementation` in the provider.
-6. Declare `uses Contract` in consumers and resolve implementations through `ServiceLoader`.
-7. Specify behavior for no provider and multiple providers.
+5. For service-loaded capabilities, declare `provides Contract with Implementation` in the provider.
+6. Declare `uses Contract` in consumers and resolve through `ServiceLoader`, or follow documented explicit construction for capabilities that support it.
+7. Specify selection policy in the owning application and document provider mechanics locally.
 8. Test the provider through the contract.
 
 If changing an existing version would break source, binary, or semantic compatibility, create the next versioned package.
 
 ## Add Minau tests
 
-Use testing v02 for new suites when supported by the selected catalog and Minau revisions. Keep existing v01 suites unless migration is requested.
+Use testing v02 for new suites when supported by the selected catalog and Minau revisions. Preserve existing v01 suites unless migration is requested. Follow the [shared testing conventions](conventions.md#testing) for case design and inline assertions.
 
-For a v02 test module, export only the suite package to the runner; do not add `opens` for case records:
+1. Read the consuming project’s testing reference and canonical commands. Identify its production/test modules and dependency revisions.
+2. Read the [catalog skill](https://github.com/archaic-java/service-catalog/blob/main/skills/maintain-service-catalog/SKILL.md) and its [testing v02 reference](https://github.com/archaic-java/service-catalog/blob/main/skills/maintain-service-catalog/references/test-v02.md) for suite registration, case execution and trail contracts. Inspect linked declarations in the actual dependency checkout.
+3. Read [Minau’s maintenance skill](https://github.com/archaic-java/minau/blob/main/skills/maintain-minau/SKILL.md), especially its writing-tests, discovery and CLI references, for public constructors, JPMS visibility, launch/selection options and runner behavior. Use its README example rather than maintaining another complete example here.
+4. Add cases at the closest observable boundary and update the consuming project’s descriptors/command files as needed. Keep its fixture choices and launch commands in that project’s documentation.
+5. Compile, then run the consuming project’s documented test command. Inspect evidence and exit status using the selected runner’s guidance.
 
-```java
-module work.archaic.example.test {
-    requires work.archaic.example;
-    requires work.archaic.service.catalog;
-    exports work.archaic.example.test to work.archaic.minau;
-}
-```
-
-Use one public suite record per file, with package-private case records underneath. For example, `ArithmeticTests.java`:
-
-```java
-package work.archaic.example.test;
-
-import java.util.Collection;
-import work.archaic.service.test.v02.TestCase;
-import work.archaic.service.test.v02.TestSuite;
-import work.archaic.service.test.v02.TestTrail;
-
-public record ArithmeticTests() implements TestSuite {
-    @Override
-    public void cases(Collection<TestCase> cases) {
-        cases.add(new Addition(2, 3, 5));
-        cases.add(new Addition(-1, 1, 0));
-        for (int value = 0; value < 5; value++) {
-            cases.add(new Addition(value, 0, value));
-        }
-    }
-}
-
-record Addition(int left, int right, int expected) implements TestCase {
-    @Override
-    public void run(TestTrail trail) {
-        int actual = Math.addExact(left, right);
-        trail.note("Actual sum: " + actual);
-        assert actual == expected
-            : "Addition must produce the specified sum: expected " + expected + ", got " + actual;
-    }
-}
-```
-
-Use Java `assert condition : "reason";` for every assertion, including negative and expected-exception checks. The short message must explain which expectation was violated and why that means the test failed. Do not introduce assertion helper methods or wrappers: keep verification inline, or propose a test API extension when that would improve readability.
-
-Replace the illustrative JDK arithmetic with the production behavior being tested. Register case data only in `cases`; acquire resources and create mutable fixtures inside `run`, using try-with-resources where appropriate. Do not keep the registration collection or modify it after returning. Minau snapshots it, then executes each registration independently. Use loops for data-driven cases; no parameterized-test machinery is needed. See conventions for trail lifetime, failure behavior and concurrency rules.
-
-Include Minau, the catalog, production and test modules in compile roots. The test module depends on the catalog API, not the runner implementation. Keep source links to sibling `minau` and `service-catalog` checkouts explicit. The test launcher normally includes:
-
-```text
--ea
---module-path out:lib/bin
---add-modules work.archaic.example.test
--m work.archaic.minau/work.archaic.minau.Main
-work.archaic.example.test
-```
-
-Compile first, then launch from the project root so Minau can scan `out/<module-name>`. Keep `-m` and its main-module argument together as required by the project's established argument-file form. For multiple modules, supply comma-separated names both to `--add-modules` and to Minau. Add `--debug` after the main class argument for per-case completion status.
-
-For existing v01 suites, keep `work.archaic.service.test.v01.TestSuite`, zero-argument `@Test` methods and qualified `opens <test-package> to work.archaic.minau`. A module can contain both versions, but a suite should implement only one. Do not rewrite published v01 contracts to introduce v02 behavior.
+Do not assume Minau scans an `out/<module-name>` filesystem layout. Discovery behavior belongs to its versioned implementation and documentation; a different runner may schedule cases differently while honoring the catalog contract. Read only the references relevant to the task, not every catalog or runner document.
 
 ## Validate a change
 
@@ -226,7 +177,12 @@ Confirm that:
 - assertions were enabled for assertion-based tests;
 - `out/` and other generated files remain untracked;
 - the run command exercises the intended entry point;
-- documentation still names the exact working commands.
+- documentation still names the exact working commands;
+- a contributor can find changed constraints, owning code and verification through the project skill;
+- changed links/anchors and examples resolve and match the dependency revisions used;
+- detailed rules have one authoritative home and conformance assertions do not invent guarantees.
+
+For documentation-only changes, validate metadata, links, routing and claims against source as described in [documentation.md](documentation.md). Run Java checks when changed examples or guarantees require execution; report unavailable tools rather than claiming checks passed.
 
 ## Diagnose failures
 
@@ -258,7 +214,7 @@ Identify whether the consumer is missing `requires` or the producer intentionall
 
 ### Reflective access failure in tests
 
-For v01 annotated methods, retain a qualified `opens <test-package> to work.archaic.minau`. For v02, check that the suite is public, has a public no-argument constructor, and its package is exported to `work.archaic.minau`; package-private cases are invoked through TestCase and need no reflective access. Do not add global `--add-opens` to fix v02 case visibility.
+Check the selected runner’s discovery/access reference and the catalog’s suite/case contract. For Minau, start from its [maintenance skill](https://github.com/archaic-java/minau/blob/main/skills/maintain-minau/SKILL.md). Diagnose the module descriptor and suite declaration before introducing access changes. Do not add global `--add-opens` or reflective workarounds merely to bypass the boundary.
 
 ### Assertions appear to pass unexpectedly
 
