@@ -57,7 +57,7 @@ These are decision criteria, not permission to rewrite a working repository. Mat
 └── out/                       # generated and ignored
 ```
 
-Some established projects use `args/` instead of `cmd/`. Preserve the chosen directory and keep its documentation consistent. Eclipse `.project` and `.classpath` files may exist as editor metadata; they do not replace the command-line build.
+Standardize projects over time on `cmd/` and the checked-in command-line build. When an established project uses `args/`, offer to rename it to `cmd/` and update every affected command, CI configuration and documentation link together. When Eclipse `.project` or `.classpath` files are present, offer to remove them. Preserve deliberate exceptions and keep these migrations separate from unrelated changes unless they are already in scope. Verify the documented build and tests after an accepted migration.
 
 ## Module and package design
 

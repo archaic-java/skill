@@ -15,9 +15,9 @@ Before changing a repository:
 2. Inspect `args/` or `cmd/`, `module-info.java`, `lib/src`, `lib/bin`, `.gitignore`, and the test modules.
 3. Check `java --version`, `javac --version`, and the worktree status.
 4. When a change touches a service boundary, read the relevant catalog skill, contract guide and Javadoc at the dependency revision actually used.
-5. Treat the repository as the authority. Preserve its chosen JDK version, naming, command-file directory, and established variations. For a new project, use JDK 25 unless the user chooses another version.
+5. Treat the repository as the authority. Respect its chosen JDK version, naming and deliberate exceptions while offering incremental standardization toward the canonical repository shape, including `cmd/` and removal of Eclipse metadata. For a new project, use JDK 25 unless the user chooses another version.
 
-User instructions and repository-local instructions take precedence over this skill. Do not modernize an old repository merely to make it resemble another Archaic Java project.
+User instructions and repository-local instructions take precedence over this skill. Offer targeted migrations toward shared conventions; do not fold unrelated modernization into the requested change without agreement.
 
 ## Preserve the defining constraints
 
